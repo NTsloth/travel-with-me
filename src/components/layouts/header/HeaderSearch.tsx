@@ -34,8 +34,13 @@ const CitySelect = ({
 );
 
 export function HeaderSearch() {
-  const { searchState, setSearchState, handleSearch, isLoading } =
-    useTravelSearch();
+  const {
+    searchState,
+    setSearchState,
+    handleSearch,
+    isLoading,
+    openOfferModal,
+  } = useTravelSearch();
 
   const handleInputChange = (
     field: keyof typeof searchState,
@@ -86,6 +91,17 @@ export function HeaderSearch() {
             className={styles.searchButton}
           >
             {isLoading ? "ვპოულობთ..." : "ძებნა"}
+          </button>
+          <button
+            onClick={openOfferModal}
+            className={styles.searchButton}
+            style={{
+              backgroundColor: "#10b981",
+              width: "auto",
+              marginLeft: "auto",
+            }}
+          >
+            დაამატე შეთავაზება (მძღოლი)
           </button>
         </div>
       </div>

@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, FormEvent } from "react";
+import React, { useState, FormEvent, useEffect } from "react";
 import { useTravelSearch } from "@/components/context/TravelSearchContext";
 import { GEORGIAN_CITIES, TravelRoute } from "@/components/data/data";
 import styles from "../../../styles/header/HeaderSearch.module.css";
+import { useAuth } from "@/components/context/AuthContext"; // NEW IMPORT
 
 const initialFormData: Omit<TravelRoute, "id"> = {
   fromCity: GEORGIAN_CITIES[0],
@@ -17,19 +18,48 @@ const initialFormData: Omit<TravelRoute, "id"> = {
   freeSeats: 1,
 };
 
-export function OfferForm() {
+export function OfferForm({ isModal = false }: { isModal?: boolean }) {
   const { handleAddRoute, isLoading } = useTravelSearch();
+  const { userProfile } = useAuth();
   const [formData, setFormData] = useState(initialFormData);
   const [status, setStatus] = useState("");
+
+  if (!userProfile) {
+    return (
+      <p style={{ color: "red", textAlign: "center" }}>
+        შეცდომა: მომხმარებლის პროფილი ვერ მოიძებნა.
+      </p>
+    );
+  }
+
+  useEffect(() => {
+    if (userProfile && userProfile.driverName) {
+      setFormData((prev) => ({
+        ...prev,
+        driverName: userProfile.driverName,
+        driverAge: userProfile.driverAge,
+        driverPhone: userProfile.driverPhone,
+      }));
+    }
+  }, [userProfile]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
+
+    if (
+      name === "driverName" ||
+      name === "driverAge" ||
+      name === "driverPhone"
+    ) {
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]:
-        type === "number" || name === "driverAge" || name === "freeSeats"
+        type === "number" || name === "freeSeats"
           ? parseInt(value) || 0
           : value,
     }));
@@ -44,7 +74,25 @@ export function OfferForm() {
       return;
     }
 
-    const success = await handleAddRoute(formData);
+    const priceValue = String(formData.price).trim().toUpperCase();
+    const numericPart = priceValue.replace(/[^0-9.]/g, "");
+
+    if (!numericPart) {
+      setStatus("გთხოვთ შეიყვანოთ ფასი.");
+      return;
+    }
+
+    const formattedPrice = `${numericPart} GEL`;
+
+    const routeDataToSubmit: Omit<TravelRoute, "id"> = {
+      ...formData,
+      price: formattedPrice,
+      driverName: userProfile.driverName,
+      driverAge: userProfile.driverAge,
+      driverPhone: userProfile.driverPhone,
+    };
+
+    const success = await handleAddRoute(routeDataToSubmit);
 
     if (success) {
       setStatus(
@@ -57,17 +105,58 @@ export function OfferForm() {
   };
 
   return (
-    <div className={styles.formSection}>
-      <h2 className={styles.title} style={{ fontSize: "20px" }}>
-        შექმენი ახალი შეთავაზება (მძღოლის რეგისტრაცია)
-      </h2>
-      <p style={{ color: "rgb(107 114 128)", marginTop: "4px" }}>
-        შეავსეთ მონაცემები და დაამატეთ თქვენი მარშრუტი სისტემაში.
-      </p>
+    <div className={isModal ? "" : styles.formSection}>
+      {!isModal && (
+        <>
+          <h2 className={styles.title} style={{ fontSize: "20px" }}>
+            შექმენი ახალი შეთავაზება (მძღოლის პროფილი: **
+            {userProfile.driverName}**)
+          </h2>
+          <p style={{ color: "rgb(107 114 128)", marginTop: "4px" }}>
+            შეავსეთ მარშრუტის მონაცემები.
+          </p>
+        </>
+      )}
+
+      {isModal && (
+        <p style={{ color: "rgb(107 114 128)", marginBottom: "16px" }}>
+          შეავსეთ მარშრუტის მონაცემები.
+        </p>
+      )}
 
       <form onSubmit={handleSubmit}>
         <div className={styles.formGrid}>
-          {/* ქალაქები და თარიღი */}
+          <div>
+            <label className={styles.label}>მძღოლის სახელი</label>
+            <input
+              type="text"
+              name="driverName"
+              value={userProfile.driverName}
+              className={styles.inputField}
+              disabled
+            />
+          </div>
+          <div>
+            <label className={styles.label}>ასაკი</label>
+            <input
+              type="text"
+              name="driverAge"
+              value={userProfile.driverAge}
+              className={styles.inputField}
+              disabled
+            />
+          </div>
+          <div>
+            <label className={styles.label}>ტელეფონის ნომერი</label>
+            <input
+              type="text"
+              name="driverPhone"
+              value={userProfile.driverPhone}
+              className={styles.inputField}
+              disabled
+            />
+          </div>
+
           <div>
             <label className={styles.label}>საიდან</label>
             <select
@@ -111,41 +200,6 @@ export function OfferForm() {
           </div>
 
           <div>
-            <label className={styles.label}>მძღოლის სახელი</label>
-            <input
-              type="text"
-              name="driverName"
-              value={formData.driverName}
-              onChange={handleChange}
-              className={styles.inputField}
-              required
-            />
-          </div>
-          <div>
-            <label className={styles.label}>ასაკი</label>
-            <input
-              type="number"
-              name="driverAge"
-              value={formData.driverAge}
-              onChange={handleChange}
-              className={styles.inputField}
-              min="18"
-              required
-            />
-          </div>
-          <div>
-            <label className={styles.label}>ტელეფონის ნომერი</label>
-            <input
-              type="tel"
-              name="driverPhone"
-              value={formData.driverPhone}
-              onChange={handleChange}
-              className={styles.inputField}
-              required
-            />
-          </div>
-
-          <div>
             <label className={styles.label}>მანქანის მოდელი</label>
             <input
               type="text"
@@ -176,7 +230,7 @@ export function OfferForm() {
               value={formData.price}
               onChange={handleChange}
               className={styles.inputField}
-              placeholder="მაგ: 50 GEL"
+              placeholder="მაგ: 50"
               required
             />
           </div>

@@ -9,29 +9,27 @@ export function SearchResults() {
   const { searchResults, isLoading, searchState, openModal } =
     useTravelSearch();
 
+  // Check if searchState is empty (indicating default "all" view)
+  const isDefaultView =
+    !searchState.fromCity && !searchState.toCity && !searchState.travelDate;
+
+  const resultsHeader = isDefaultView
+    ? `ყველა აქტიური შეთავაზება (${searchResults?.length || 0})`
+    : `ნაპოვნი მარშრუტები ${searchState.fromCity} - ${searchState.toCity} (თარიღი: ${searchState.travelDate}):`;
+
   if (isLoading) {
     return (
       <div className={styles.infoMessage}>
         <p className="text-xl">
-          ვტვირთავთ შედეგებს {searchState.fromCity}-დან {searchState.toCity}
-          -მდე...
+          {isDefaultView
+            ? "ვტვირთავთ ყველა შეთავაზებას..."
+            : `ვტვირთავთ შედეგებს ${searchState.fromCity}-დან ${searchState.toCity}-მდე...`}
         </p>
       </div>
     );
   }
 
-  if (searchResults === null) {
-    return (
-      <div className={styles.infoMessage}>
-        <p>
-          შეიყვანეთ თქვენი სამგზავრო დეტალები და დააჭირეთ 'ძებნა' ღილაკს
-          მარშრუტების სანახავად.
-        </p>
-      </div>
-    );
-  }
-
-  if (searchResults.length === 0) {
+  if (searchResults === null || searchResults.length === 0) {
     return (
       <div className={styles.errorMessage}>
         <p className="text-xl">
@@ -43,9 +41,7 @@ export function SearchResults() {
 
   return (
     <div className={styles.resultsContainer}>
-      <h2 className={styles.title}>
-        ნაპოვნი მარშრუტები {searchState.travelDate} თარიღისთვის:
-      </h2>
+      <h2 className={styles.title}>{resultsHeader}</h2>
       <ul className={styles.list}>
         {searchResults.map((result: TravelRoute) => (
           <li key={result.id} className={styles.listItem}>

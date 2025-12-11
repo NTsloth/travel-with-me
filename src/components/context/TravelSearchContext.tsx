@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from "react";
 import {
   TravelSearchState,
   initialSearchState,
@@ -8,6 +14,7 @@ import {
   TravelRoute,
   addTravelRoute,
 } from "../data/data";
+
 interface TravelContextType {
   searchState: TravelSearchState;
   setSearchState: React.Dispatch<React.SetStateAction<TravelSearchState>>;
@@ -19,6 +26,10 @@ interface TravelContextType {
   selectedRoute: TravelRoute | null;
   openModal: (route: TravelRoute) => void;
   closeModal: () => void;
+
+  isOfferModalOpen: boolean;
+  openOfferModal: () => void;
+  closeOfferModal: () => void;
 
   handleAddRoute: (routeData: Omit<TravelRoute, "id">) => Promise<boolean>;
 }
@@ -37,6 +48,11 @@ export const TravelSearchProvider = ({ children }: { children: ReactNode }) => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState<TravelRoute | null>(null);
+
+  const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
+
+  const openOfferModal = () => setIsOfferModalOpen(true);
+  const closeOfferModal = () => setIsOfferModalOpen(false);
 
   const openModal = (route: TravelRoute) => {
     setSelectedRoute(route);
@@ -62,12 +78,19 @@ export const TravelSearchProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  useEffect(() => {
+    handleSearch();
+  }, []);
+
   const handleAddRoute = async (
     routeData: Omit<TravelRoute, "id">
   ): Promise<boolean> => {
     try {
       await addTravelRoute(routeData);
+      setSearchState(initialSearchState);
+      await fetchTravelData(initialSearchState);
       handleSearch();
+      closeOfferModal();
       return true;
     } catch (error) {
       console.error("მარშრუტის დამატება ვერ მოხერხდა:", error);
@@ -86,6 +109,10 @@ export const TravelSearchProvider = ({ children }: { children: ReactNode }) => {
     openModal,
     closeModal,
     handleAddRoute,
+
+    isOfferModalOpen,
+    openOfferModal,
+    closeOfferModal,
   };
 
   return (

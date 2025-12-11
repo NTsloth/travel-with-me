@@ -47,29 +47,29 @@ export function RouteDetailsModal() {
           </div>
           <div className={styles.infoGroup}>
             <p>
-              <span className={styles.infoLabel}>მძღოლი:</span>{" "}
+              <span className={styles.infoLabel}>მძღოლი:</span>
               {route.driverName}
             </p>
             <p>
-              <span className={styles.infoLabel}>ასაკი:</span> {route.driverAge}{" "}
+              <span className={styles.infoLabel}>ასაკი:</span> {route.driverAge}
               წელი
             </p>
             <p>
-              <span className={styles.infoLabel}>მანქანა:</span>{" "}
+              <span className={styles.infoLabel}>მანქანა:</span>
               {route.carModel}
             </p>
             <p>
               <span className={styles.infoLabel}>ფასი:</span> {route.price}
             </p>
             <p>
-              <span className={styles.infoLabel}>თავისუფალი ადგილები:</span>{" "}
+              <span className={styles.infoLabel}>თავისუფალი ადგილები:</span>
               {route.freeSeats}
             </p>
           </div>
         </div>
 
         <p>
-          <span className={styles.infoLabel}>გზა:</span> {route.fromCity} -{" "}
+          <span className={styles.infoLabel}>გზა:</span> {route.fromCity} -
           {route.toCity}
         </p>
         <p>
