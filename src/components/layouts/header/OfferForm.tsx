@@ -4,7 +4,7 @@ import React, { useState, FormEvent, useEffect } from "react";
 import { useTravelSearch } from "@/components/context/TravelSearchContext";
 import { GEORGIAN_CITIES, TravelRoute } from "@/components/data/data";
 import styles from "../../../styles/header/HeaderSearch.module.css";
-import { useAuth } from "@/components/context/AuthContext"; // NEW IMPORT
+import { useAuth } from "@/components/context/AuthContext";
 
 const initialFormData: Omit<TravelRoute, "id"> = {
   fromCity: GEORGIAN_CITIES[0],

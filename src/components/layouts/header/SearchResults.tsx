@@ -9,7 +9,6 @@ export function SearchResults() {
   const { searchResults, isLoading, searchState, openModal } =
     useTravelSearch();
 
-  // Check if searchState is empty (indicating default "all" view)
   const isDefaultView =
     !searchState.fromCity && !searchState.toCity && !searchState.travelDate;
 
