@@ -1,72 +1,33 @@
 "use client";
-
+import React from "react";
 import { useTravelSearch } from "@/components/context/TravelSearchContext";
-import { RouteDetailsModal } from "@/components/UI/RouteDetailsModal";
-import styles from "../../../styles/header/SearchResults.module.css";
-import { TravelRoute } from "@/components/data/data";
+import styles from "@/styles/header/SearchResults.module.css";
 
 export function SearchResults() {
-  const { searchResults, isLoading, searchState, openModal } =
-    useTravelSearch();
+  const { searchResults, openModal } = useTravelSearch();
 
-  const isDefaultView =
-    !searchState.fromCity && !searchState.toCity && !searchState.travelDate;
-
-  const resultsHeader = isDefaultView
-    ? `ყველა აქტიური შეთავაზება (${searchResults?.length || 0})`
-    : `ნაპოვნი მარშრუტები ${searchState.fromCity} - ${searchState.toCity} (თარიღი: ${searchState.travelDate}):`;
-
-  if (isLoading) {
-    return (
-      <div className={styles.infoMessage}>
-        <p className="text-xl">
-          {isDefaultView
-            ? "ვტვირთავთ ყველა შეთავაზებას..."
-            : `ვტვირთავთ შედეგებს ${searchState.fromCity}-დან ${searchState.toCity}-მდე...`}
-        </p>
-      </div>
-    );
-  }
-
-  if (searchResults === null || searchResults.length === 0) {
-    return (
-      <div className={styles.errorMessage}>
-        <p className="text-xl">
-          თქვენი შერჩეული კრიტერიუმებისთვის სამგზავრო მარშრუტები არ მოიძებნა.
-        </p>
-      </div>
-    );
-  }
+  if (!searchResults || searchResults.length === 0) return null;
 
   return (
     <div className={styles.resultsContainer}>
-      <h2 className={styles.title}>{resultsHeader}</h2>
-      <ul className={styles.list}>
-        {searchResults.map((result: TravelRoute) => (
-          <li key={result.id} className={styles.listItem}>
-            <div className={styles.routeInfo}>
-              <p className={styles.route}>
-                {result.fromCity} - {result.toCity}
-              </p>
-              <p className={styles.date}>მანქანა: {result.carModel}</p>
-              <p className={styles.date}>
-                თავისუფალი ადგილები: {result.freeSeats}
-              </p>
+      <h2 className={styles.title}>ნაპოვნია {searchResults.length} რეისი</h2>
+      <div className={styles.grid}>
+        {searchResults.map((route: any) => (
+          <div key={route.id} className={styles.card} onClick={() => openModal(route)}>
+            <div className={styles.cardHeader}>
+              <span className={styles.routeBadge}>მარშრუტი</span>
+              <span className={styles.price}>{route.price}</span>
             </div>
-
-            <div className={styles.priceButtonContainer}>
-              <span className={styles.price}>{result.price}</span>
-              <button
-                onClick={() => openModal(result)}
-                className={styles.detailsButton}
-              >
-                ვრცლად
-              </button>
+            <h3 className={styles.routeName}>{route.fromCity} → {route.toCity}</h3>
+            <div className={styles.metaInfo}>
+              <p>👤 {route.driverName}</p>
+              <p>📅 {route.date}</p>
+              <p>💺 {route.freeSeats} თავისუფალი ადგილი</p>
             </div>
-          </li>
+            <button className={styles.detailsButton}>დეტალები</button>
+          </div>
         ))}
-      </ul>
-      <RouteDetailsModal />
+      </div>
     </div>
   );
 }

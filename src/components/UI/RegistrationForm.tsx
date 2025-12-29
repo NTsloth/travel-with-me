@@ -1,188 +1,100 @@
 "use client";
-
-import React, { useState, FormEvent } from "react";
+import React, { useState } from "react";
 import { useAuth } from "@/components/context/AuthContext";
-import styles from "@/styles/UI/Registration.module.css";
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const GEORGIAN_PHONE_REGEX = /^5[0-9]{8}$/;
-
-interface FormErrors {
-  gmail?: string;
-  number?: string;
-  driverName?: string;
-  driverAge?: string;
-  general?: string;
-}
+import styles from "@/styles/UI/Registration.module.css"; 
 
 export function RegistrationForm() {
   const { registerUser } = useAuth();
-  const [formData, setFormData] = useState({
-    gmail: "",
-    number: "",
-    driverName: "",
-    driverAge: "",
+  const [formData, setFormData] = useState({ 
+    gmail: "", 
+    number: "", 
+    driverName: "", 
+    driverAge: "" 
   });
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    let newValue = value;
-
-    setErrors((prev) => ({ ...prev, [name]: undefined, general: undefined }));
-
-    if (name === "number") {
-      newValue = value.replace(/[^0-9]/g, "");
-    }
-
-    setFormData({ ...formData, [name]: newValue });
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-    let isValid = true;
-
-    if (!formData.driverName.trim()) {
-      newErrors.driverName = "გთხოვთ შეიყვანოთ სახელი და გვარი.";
-      isValid = false;
-    }
-    if (!formData.gmail.trim()) {
-      newErrors.gmail = "გთხოვთ შეიყვანოთ ელ. ფოსტა.";
-      isValid = false;
-    }
-    if (!formData.number.trim()) {
-      newErrors.number = "გთხოვთ შეიყვანოთ ტელეფონის ნომერი.";
-      isValid = false;
-    }
-    if (!formData.driverAge) {
-      newErrors.driverAge = "გთხოვთ შეიყვანოთ ასაკი.";
-      isValid = false;
-    }
-
-    if (!isValid) {
-      setErrors(newErrors);
-      return false;
-    }
-
-    if (!EMAIL_REGEX.test(formData.gmail)) {
-      newErrors.gmail =
-        "გთხოვთ შეიყვანოთ სწორი ელ. ფოსტის ფორმატი (მაგ: example@gmail.com).";
-      isValid = false;
-    }
-
-    if (!GEORGIAN_PHONE_REGEX.test(formData.number)) {
-      newErrors.number = "გთხოვთ შეიყვანოთ სწორი ქართული მობილურის ნომერი.";
-      isValid = false;
-    }
-
-    const age = parseInt(formData.driverAge);
-    if (isNaN(age) || age < 18 || age > 100) {
-      newErrors.driverAge =
-        "ასაკი უნდა იყოს რიცხვი, მინიმუმ 18 და მაქსიმუმ 100.";
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
-  };
-
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    if (!validateForm()) {
-      setErrors((prev) => ({
-        ...prev,
-        general: "გთხოვთ შეასწოროთ ფორმაში არსებული შეცდომები.",
-      }));
-      return;
+    const result = await registerUser({
+      ...formData,
+      driverAge: parseInt(formData.driverAge)
+    });
+
+    if (!result.success) {
+      setError(result.message || "შეცდომა რეგისტრაციისას");
     }
-
-    const age = parseInt(formData.driverAge);
-
-    const submittedData = {
-      surname: "",
-      otherDetail: "",
-      driverPhone: formData.number,
-
-      gmail: formData.gmail,
-      number: formData.number,
-      driverName: formData.driverName.trim(),
-      driverAge: age,
-    };
-
-    registerUser(submittedData);
+    setLoading(false);
   };
-
-  const getInputClassName = (name: keyof FormErrors) =>
-    `${styles.inputField} ${errors[name] ? styles.inputError : ""}`;
 
   return (
-    <div className={styles.container}>
-      <form onSubmit={handleSubmit}>
-        <h2 style={{ textAlign: "center", marginBottom: "20px" }}>
-          რეგისტრაცია
-        </h2>
+    <div className={styles.fullScreenOverlay}>
+      <div className={styles.registrationCard}>
+        <h2 className={styles.title}>რეგისტრაცია</h2>
+        
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.inputGroup}>
+            <label htmlFor="reg-name">სახელი და გვარი</label>
+            <input 
+              id="reg-name"
+              name="driverName"
+              className={styles.input} 
+              placeholder="მაგ: გიორგი დვალი" 
+              onChange={(e) => setFormData({...formData, driverName: e.target.value})} 
+              required 
+            />
+          </div>
 
-        <input
-          type="text"
-          name="driverName"
-          placeholder="სახელი და გვარი"
-          value={formData.driverName}
-          onChange={handleChange}
-          className={getInputClassName("driverName")}
-          required
-        />
-        {errors.driverName && (
-          <p className={styles.errorMessage}>{errors.driverName}</p>
-        )}
+          <div className={styles.inputGroup}>
+            <label htmlFor="reg-email">ელ-ფოსტა</label>
+            <input 
+              id="reg-email"
+              name="gmail"
+              className={styles.input} 
+              type="email" 
+              placeholder="example@gmail.com" 
+              onChange={(e) => setFormData({...formData, gmail: e.target.value})} 
+              required 
+            />
+          </div>
 
-        <input
-          type="email"
-          name="gmail"
-          placeholder="ელ. ფოსტა (Gmail)"
-          value={formData.gmail}
-          onChange={handleChange}
-          className={getInputClassName("gmail")}
-          required
-        />
-        {errors.gmail && <p className={styles.errorMessage}>{errors.gmail}</p>}
+          <div className={styles.inputGroup}>
+            <label htmlFor="reg-phone">ტელეფონის ნომერი</label>
+            <input 
+              id="reg-phone"
+              name="number"
+              className={styles.input} 
+              type="tel"
+              maxLength={9}
+              placeholder="5________" 
+              onChange={(e) => setFormData({...formData, number: e.target.value.replace(/\D/g, '')})} 
+              required 
+            />
+          </div>
 
-        <input
-          type="tel"
-          name="number"
-          placeholder="ტელეფონის ნომერი"
-          value={formData.number}
-          onChange={handleChange}
-          className={getInputClassName("number")}
-          maxLength={9}
-          required
-        />
-        {errors.number && (
-          <p className={styles.errorMessage}>{errors.number}</p>
-        )}
+          <div className={styles.inputGroup}>
+            <label htmlFor="reg-age">ასაკი (მინ. 18)</label>
+            <input 
+              id="reg-age"
+              name="driverAge"
+              className={styles.input} 
+              type="number" 
+              placeholder="18" 
+              onChange={(e) => setFormData({...formData, driverAge: e.target.value})} 
+              required 
+            />
+          </div>
 
-        <input
-          type="number"
-          name="driverAge"
-          placeholder="ასაკი"
-          value={formData.driverAge}
-          onChange={handleChange}
-          className={getInputClassName("driverAge")}
-          min="18"
-          max="100"
-          required
-        />
-        {errors.driverAge && (
-          <p className={styles.errorMessage}>{errors.driverAge}</p>
-        )}
+          {error && <p className={styles.errorText}>{error}</p>}
 
-        {errors.general && (
-          <p className={styles.generalErrorMessage}>{errors.general}</p>
-        )}
-
-        <button type="submit">რეგისტრაციის გავლა</button>
-      </form>
+          <button type="submit" className={styles.submitButton} disabled={loading}>
+            {loading ? "იტვირთება..." : "რეგისტრაციის დასრულება"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

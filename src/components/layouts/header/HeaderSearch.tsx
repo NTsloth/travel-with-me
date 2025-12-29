@@ -2,109 +2,70 @@
 
 import React from "react";
 import { useTravelSearch } from "@/components/context/TravelSearchContext";
+import { useAuth } from "@/components/context/AuthContext";
 import { GEORGIAN_CITIES } from "@/components/data/data";
-import styles from "../../../styles/header/HeaderSearch.module.css";
-
-const CitySelect = ({
-  value,
-  onChange,
-  label,
-}: {
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  label: string;
-}) => (
-  <div className={styles.formGroup}>
-    <label htmlFor={label} className={styles.label}>
-      {label}
-    </label>
-    <select
-      id={label}
-      value={value}
-      onChange={onChange}
-      className={styles.selectInput}
-    >
-      {GEORGIAN_CITIES.map((city) => (
-        <option key={city} value={city}>
-          {city}
-        </option>
-      ))}
-    </select>
-  </div>
-);
+import styles from "@/styles/header/HeaderSearch.module.css";
 
 export function HeaderSearch() {
-  const {
-    searchState,
-    setSearchState,
-    handleSearch,
-    isLoading,
-    openOfferModal,
-  } = useTravelSearch();
+  const { searchState, setSearchState, handleSearch, openOfferModal } = useTravelSearch();
+  const { logout } = useAuth(); 
 
-  const handleInputChange = (
-    field: keyof typeof searchState,
-    value: string
-  ) => {
-    setSearchState((prev) => ({ ...prev, [field]: value }));
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setSearchState((prev: any) => ({ ...prev, [name]: value }));
   };
 
   return (
-    <header className={styles.header}>
-      <div className={styles.container}>
-        <div className={styles.logoTitle}>
-          <span role="img" aria-label="airplane" className="text-2xl">
-            ✈️
-          </span>
-          <h1 className={styles.title}>გამიყოლე</h1>
+    <div className={styles.searchContainer}>
+      <div className={styles.searchBar}>
+        <div className={styles.inputWrapper}>
+          <label htmlFor="from-city-select" className={styles.label}>საიდან</label>
+          <select 
+            id="from-city-select"
+            name="fromCity" 
+            value={searchState.fromCity} 
+            onChange={handleChange} 
+            className={styles.selectInput}
+          >
+            <option value="">ყველა ქალაქი</option>
+            {GEORGIAN_CITIES.map((city) => <option key={`from-${city}`} value={city}>{city}</option>)}
+          </select>
         </div>
 
-        <div className={styles.formArea}>
-          <CitySelect
-            label="საიდან"
-            value={searchState.fromCity}
-            onChange={(e) => handleInputChange("fromCity", e.target.value)}
-          />
-
-          <CitySelect
-            label="სად"
-            value={searchState.toCity}
-            onChange={(e) => handleInputChange("toCity", e.target.value)}
-          />
-
-          <div className={styles.formGroup}>
-            <label htmlFor="travelDate" className={styles.label}>
-              მგზავრობის თარიღი
-            </label>
-            <input
-              id="travelDate"
-              type="date"
-              value={searchState.travelDate}
-              onChange={(e) => handleInputChange("travelDate", e.target.value)}
-              className={styles.selectInput}
-            />
-          </div>
-
-          <button
-            onClick={handleSearch}
-            disabled={isLoading}
-            className={styles.searchButton}
+        <div className={styles.inputWrapper}>
+          <label htmlFor="to-city-select" className={styles.label}>სად</label>
+          <select 
+            id="to-city-select"
+            name="toCity" 
+            value={searchState.toCity} 
+            onChange={handleChange} 
+            className={styles.selectInput}
           >
-            {isLoading ? "ვპოულობთ..." : "ძებნა"}
-          </button>
-          <button
-            onClick={openOfferModal}
-            className={styles.searchButton}
-            style={{
-              backgroundColor: "#10b981",
-              width: "auto",
-              marginLeft: "auto",
-            }}
-          >
-            დაამატე შეთავაზება (მძღოლი)
-          </button>
+            <option value="">ყველა ქალაქი</option>
+            {GEORGIAN_CITIES.map((city) => <option key={`to-${city}`} value={city}>{city}</option>)}
+          </select>
         </div>
+
+        <div className={styles.inputWrapper}>
+          <label htmlFor="date-input" className={styles.label}>თარიღი</label>
+          <input 
+            id="date-input"
+            type="date" 
+            name="travelDate" 
+            value={searchState.travelDate} 
+            onChange={handleChange} 
+            className={styles.dateInput} 
+          />
+        </div>
+
+        <button className={styles.searchButton} onClick={handleSearch} type="button">ძებნა</button>
       </div>
-    </header>
+
+      <div className={styles.actions}>
+        <button className={styles.offerButton} onClick={openOfferModal} type="button">
+          ➕ დამატება
+        </button>
+      </div>
+    </div>
   );
 }

@@ -1,117 +1,84 @@
 "use client";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  ReactNode,
-  useEffect,
-} from "react";
-
-interface RegistrationData {
-  surname: string;
+interface UserProfile {
   gmail: string;
-  number: string;
-  otherDetail: string;
   driverName: string;
-  driverAge: number;
   driverPhone: string;
+  driverAge: number;
 }
 
 interface AuthContextType {
-  isRegistered: boolean;
-  registerUser: (userData: RegistrationData) => void;
-  resetRegistration: () => void;
-  userProfile: RegistrationData | null;
+  userProfile: UserProfile | null;
+  registerUser: (data: any) => Promise<{ success: boolean; message?: string }>;
+  logout: () => void;
 }
-
-const initialProfile: RegistrationData = {
-  surname: "",
-  gmail: "",
-  number: "",
-  otherDetail: "",
-  driverName: "",
-  driverAge: 0,
-  driverPhone: "",
-};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isRegistered, setIsRegistered] = useState(false);
-  const [isClientLoaded, setIsClientLoaded] = useState(false);
-  const [userProfile, setUserProfile] = useState<RegistrationData | null>(
-    initialProfile
-  );
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
+  // 1. Effect to load user from localStorage on initial boot
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedStatus = localStorage.getItem("isRegistered") === "true";
-      const storedProfile = localStorage.getItem("userProfile");
-
-      if (storedStatus && storedProfile) {
-        setIsRegistered(true);
-        try {
-          setUserProfile(JSON.parse(storedProfile));
-        } catch (e) {
-          console.error("Failed to parse user profile:", e);
-          setIsRegistered(false);
-        }
+    const savedUser = localStorage.getItem("travel_user");
+    if (savedUser) {
+      try {
+        setUserProfile(JSON.parse(savedUser));
+      } catch (e) {
+        console.error("Failed to parse saved user", e);
       }
-      setIsClientLoaded(true);
     }
   }, []);
 
-  const registerUser = (userData: RegistrationData) => {
-    console.log("Registered User Data:", userData);
+  const registerUser = async (data: any) => {
+    console.log("Frontend Context: Sending data to backend ->", data);
+    try {
+      const response = await fetch("http://127.0.0.1:5001/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
 
-    setIsRegistered(true);
-    setUserProfile(userData);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("isRegistered", "true");
-      localStorage.setItem("userProfile", JSON.stringify(userData));
+      const result = await response.json();
+      console.log("Frontend Context: Server Response ->", result);
+
+      if (response.ok) {
+        const newUser: UserProfile = {
+          gmail: result.user.gmail,
+          driverName: result.user.driverName,
+          driverPhone: result.user.number,
+          driverAge: parseInt(result.user.driverAge),
+        };
+
+        // 2. Save to state AND localStorage
+        setUserProfile(newUser);
+        localStorage.setItem("travel_user", JSON.stringify(newUser));
+        
+        return { success: true };
+      }
+      return { success: false, message: result.message };
+    } catch (err) {
+      console.error("Frontend Context: Fetch Error ->", err);
+      return { success: false, message: "სერვერთან კავშირი ვერ დამყარდა" };
     }
   };
 
-  const resetRegistration = () => {
-    setIsRegistered(false);
-    setUserProfile(initialProfile);
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("isRegistered");
-      localStorage.removeItem("userProfile");
-    }
-    window.location.reload();
+  const logout = () => {
+    // 3. Clear from state AND localStorage
+    setUserProfile(null);
+    localStorage.removeItem("travel_user");
   };
-
-  if (!isClientLoaded) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-          backgroundColor: "#f3f4f6",
-        }}
-      >
-        <p>იტვირთება...</p>
-      </div>
-    );
-  }
 
   return (
-    <AuthContext.Provider
-      value={{ isRegistered, registerUser, resetRegistration, userProfile }}
-    >
+    <AuthContext.Provider value={{ userProfile, registerUser, logout }}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
   return context;
 };

@@ -1,31 +1,29 @@
 "use client";
 
 import React from "react";
-import { useTravelSearch } from "../../context/TravelSearchContext";
+import { useTravelSearch } from "@/components/context/TravelSearchContext";
 import { OfferForm } from "./OfferForm";
-import styles from "../../../styles/header/SearchResults.module.css";
+import styles from "@/styles/UI/Registration.module.css";
 
 export function OfferFormModal() {
   const { isOfferModalOpen, closeOfferModal } = useTravelSearch();
 
-  if (!isOfferModalOpen) {
-    return null;
-  }
+  if (!isOfferModalOpen) return null;
 
   return (
     <div className={styles.modalOverlay} onClick={closeOfferModal}>
-      <div
-        className={styles.modalContent}
-        style={{ maxWidth: "800px", width: "90%" }}
+      <div 
+        className={styles.modalContent} 
+        style={{ maxWidth: "700px" }} 
         onClick={(e) => e.stopPropagation()}
       >
+        <button onClick={closeOfferModal} className={styles.closeX}>
+          &times;
+        </button>
+        
         <div className={styles.modalHeader}>
-          <h3 className={styles.title}>
-            შექმენი ახალი შეთავაზება (მძღოლის რეგისტრაცია)
-          </h3>
-          <button onClick={closeOfferModal} className={styles.modalCloseButton}>
-            &times;
-          </button>
+          <h2>🚗 ახალი შეთავაზება</h2>
+          <p className={styles.subtitle}>შეავსეთ მარშრუტის მონაცემები</p>
         </div>
 
         <OfferForm isModal={true} />

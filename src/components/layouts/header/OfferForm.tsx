@@ -3,8 +3,8 @@
 import React, { useState, FormEvent, useEffect } from "react";
 import { useTravelSearch } from "@/components/context/TravelSearchContext";
 import { GEORGIAN_CITIES, TravelRoute } from "@/components/data/data";
-import styles from "../../../styles/header/HeaderSearch.module.css";
 import { useAuth } from "@/components/context/AuthContext";
+import styles from "../../../styles/UI/Registration.module.css";
 
 const initialFormData: Omit<TravelRoute, "id"> = {
   fromCity: GEORGIAN_CITIES[0],
@@ -19,16 +19,18 @@ const initialFormData: Omit<TravelRoute, "id"> = {
 };
 
 export function OfferForm({ isModal = false }: { isModal?: boolean }) {
-  const { handleAddRoute, isLoading } = useTravelSearch();
+  const { handleAddRoute, isLoading: searchLoading } = useTravelSearch();
   const { userProfile } = useAuth();
   const [formData, setFormData] = useState(initialFormData);
   const [status, setStatus] = useState("");
 
   if (!userProfile) {
     return (
-      <p style={{ color: "red", textAlign: "center" }}>
-        შეცდომა: მომხმარებლის პროფილი ვერ მოიძებნა.
-      </p>
+      <div className={styles.phoneBox}>
+        <p style={{ color: "rgb(239 68 68)", fontWeight: "700" }}>
+          შეცდომა: მომხმარებლის პროფილი ვერ მოიძებნა.
+        </p>
+      </div>
     );
   }
 
@@ -43,25 +45,13 @@ export function OfferForm({ isModal = false }: { isModal?: boolean }) {
     }
   }, [userProfile]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-
-    if (
-      name === "driverName" ||
-      name === "driverAge" ||
-      name === "driverPhone"
-    ) {
-      return;
-    }
+    if (["driverName", "driverAge", "driverPhone"].includes(name)) return;
 
     setFormData((prev) => ({
       ...prev,
-      [name]:
-        type === "number" || name === "freeSeats"
-          ? parseInt(value) || 0
-          : value,
+      [name]: type === "number" || name === "freeSeats" ? parseInt(value) || 0 : value,
     }));
   };
 
@@ -82,178 +72,151 @@ export function OfferForm({ isModal = false }: { isModal?: boolean }) {
       return;
     }
 
-    const formattedPrice = `${numericPart} GEL`;
-
-    const routeDataToSubmit: Omit<TravelRoute, "id"> = {
+    const routeDataToSubmit = {
       ...formData,
-      price: formattedPrice,
-      driverName: userProfile.driverName,
-      driverAge: userProfile.driverAge,
-      driverPhone: userProfile.driverPhone,
+      price: `${numericPart} GEL`,
     };
 
     const success = await handleAddRoute(routeDataToSubmit);
 
     if (success) {
-      setStatus(
-        "✅ შეთავაზება წარმატებით დაემატა! იპოვეთ თქვენი მარშრუტი ქვემოთ."
-      );
+      setStatus("✅ შეთავაზება წარმატებით დაემატა!");
       setFormData(initialFormData);
     } else {
-      setStatus("❌ შეცდომა დამატებისას. სცადეთ თავიდან.");
+      setStatus("შეცდომა დამატებისას. სცადეთ თავიდან.");
     }
   };
 
   return (
-    <div className={isModal ? "" : styles.formSection}>
-      {!isModal && (
-        <>
-          <h2 className={styles.title} style={{ fontSize: "20px" }}>
-            შექმენი ახალი შეთავაზება (მძღოლის პროფილი: **
-            {userProfile.driverName}**)
-          </h2>
-          <p style={{ color: "rgb(107 114 128)", marginTop: "4px" }}>
-            შეავსეთ მარშრუტის მონაცემები.
-          </p>
-        </>
-      )}
-
-      {isModal && (
-        <p style={{ color: "rgb(107 114 128)", marginBottom: "16px" }}>
-          შეავსეთ მარშრუტის მონაცემები.
-        </p>
-      )}
-
-      <form onSubmit={handleSubmit}>
-        <div className={styles.formGrid}>
-          <div>
-            <label className={styles.label}>მძღოლის სახელი</label>
-            <input
-              type="text"
-              name="driverName"
-              value={userProfile.driverName}
-              className={styles.inputField}
-              disabled
-            />
-          </div>
-          <div>
-            <label className={styles.label}>ასაკი</label>
-            <input
-              type="text"
-              name="driverAge"
-              value={userProfile.driverAge}
-              className={styles.inputField}
-              disabled
-            />
-          </div>
-          <div>
-            <label className={styles.label}>ტელეფონის ნომერი</label>
-            <input
-              type="text"
-              name="driverPhone"
-              value={userProfile.driverPhone}
-              className={styles.inputField}
-              disabled
-            />
-          </div>
-
-          <div>
-            <label className={styles.label}>საიდან</label>
-            <select
-              name="fromCity"
-              value={formData.fromCity}
-              onChange={handleChange}
-              className={styles.inputField}
-            >
-              {GEORGIAN_CITIES.map((city) => (
-                <option key={`from-${city}`} value={city}>
-                  {city}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className={styles.label}>სად</label>
-            <select
-              name="toCity"
-              value={formData.toCity}
-              onChange={handleChange}
-              className={styles.inputField}
-            >
-              {GEORGIAN_CITIES.map((city) => (
-                <option key={`to-${city}`} value={city}>
-                  {city}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className={styles.label}>თარიღი</label>
-            <input
-              type="date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              className={styles.inputField}
-              required
-            />
-          </div>
-
-          <div>
-            <label className={styles.label}>მანქანის მოდელი</label>
-            <input
-              type="text"
-              name="carModel"
-              value={formData.carModel}
-              onChange={handleChange}
-              className={styles.inputField}
-              required
-            />
-          </div>
-          <div>
-            <label className={styles.label}>თავისუფალი ადგილები</label>
-            <input
-              type="number"
-              name="freeSeats"
-              value={formData.freeSeats}
-              onChange={handleChange}
-              className={styles.inputField}
-              min="1"
-              required
-            />
-          </div>
-          <div>
-            <label className={styles.label}>ფასი (GEL)</label>
-            <input
-              type="text"
-              name="price"
-              value={formData.price}
-              onChange={handleChange}
-              className={styles.inputField}
-              placeholder="მაგ: 50"
-              required
-            />
+    <div className={isModal ? "" : styles.formSectionContainer}>
+      <form onSubmit={handleSubmit} className={styles.modernForm}>
+        
+        <div className={styles.formSection}>
+          <h3 className={styles.sectionTitle}>👤 მძღოლის მონაცემები</h3>
+          <div className={styles.formGrid}>
+            <div className={styles.inputGroup}>
+              <label htmlFor="offer-driver-name">სახელი</label>
+              <input 
+                id="offer-driver-name"
+                name="driverName"
+                type="text" 
+                value={userProfile.driverName} 
+                className={styles.disabledInput} 
+                disabled 
+              />
+            </div>
+            <div className={styles.inputGroup}>
+              <label htmlFor="offer-driver-age">ასაკი</label>
+              <input 
+                id="offer-driver-age"
+                name="driverAge"
+                type="text" 
+                value={userProfile.driverAge} 
+                className={styles.disabledInput} 
+                disabled 
+              />
+            </div>
+            <div className={styles.inputGroup}>
+              <label htmlFor="offer-driver-phone">ტელეფონი</label>
+              <input 
+                id="offer-driver-phone"
+                name="driverPhone"
+                type="text" 
+                value={userProfile.driverPhone} 
+                className={styles.disabledInput} 
+                disabled 
+              />
+            </div>
           </div>
         </div>
 
-        <button
-          type="submit"
-          className={styles.submitButton}
-          disabled={isLoading}
-        >
-          {isLoading ? "ვამატებთ..." : "შეთავაზების დამატება"}
+        <div className={styles.formSection}>
+          <h3 className={styles.sectionTitle}>📍 მარშრუტის დეტალები</h3>
+          <div className={styles.formGrid}>
+            <div className={styles.inputGroup}>
+              <label htmlFor="offer-from-city">საიდან</label>
+              <select 
+                id="offer-from-city"
+                name="fromCity" 
+                value={formData.fromCity} 
+                onChange={handleChange}
+              >
+                {GEORGIAN_CITIES.map((city) => <option key={`from-${city}`} value={city}>{city}</option>)}
+              </select>
+            </div>
+            <div className={styles.inputGroup}>
+              <label htmlFor="offer-to-city">სად</label>
+              <select 
+                id="offer-to-city"
+                name="toCity" 
+                value={formData.toCity} 
+                onChange={handleChange}
+              >
+                {GEORGIAN_CITIES.map((city) => <option key={`to-${city}`} value={city}>{city}</option>)}
+              </select>
+            </div>
+            <div className={styles.inputGroup}>
+              <label htmlFor="offer-date">თარიღი</label>
+              <input 
+                id="offer-date"
+                type="date" 
+                name="date" 
+                value={formData.date} 
+                onChange={handleChange} 
+                required 
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.formSection}>
+          <h3 className={styles.sectionTitle}>🚘 ავტომობილი და ღირებულება</h3>
+          <div className={styles.formGrid}>
+            <div className={styles.inputGroup}>
+              <label htmlFor="offer-car-model">მანქანის მოდელი</label>
+              <input 
+                id="offer-car-model"
+                type="text" 
+                name="carModel" 
+                value={formData.carModel} 
+                onChange={handleChange} 
+                placeholder="მაგ: Toyota Prius" 
+                required 
+              />
+            </div>
+            <div className={styles.inputGroup}>
+              <label htmlFor="offer-seats">ადგილები</label>
+              <input 
+                id="offer-seats"
+                type="number" 
+                name="freeSeats" 
+                value={formData.freeSeats} 
+                onChange={handleChange} 
+                min="1" 
+                required 
+              />
+            </div>
+            <div className={styles.inputGroup}>
+              <label htmlFor="offer-price">ფასი (GEL)</label>
+              <input 
+                id="offer-price"
+                type="text" 
+                name="price" 
+                value={formData.price} 
+                onChange={handleChange} 
+                placeholder="მაგ: 20" 
+                required 
+              />
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" className={styles.submitButton} disabled={searchLoading}>
+          {searchLoading ? "ვამატებთ..." : "შეთავაზების გამოქვეყნება"}
         </button>
 
         {status && (
-          <p
-            style={{
-              textAlign: "center",
-              marginTop: "10px",
-              color: status.startsWith("✅")
-                ? "rgb(22 163 74)"
-                : "rgb(239 68 68)",
-            }}
-          >
+          <p className={status.startsWith("✅") ? styles.statusSuccess : styles.statusError}>
             {status}
           </p>
         )}
