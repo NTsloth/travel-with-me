@@ -29,13 +29,14 @@ export async function fetchTravelData(params: any) {
 
 export async function addTravelRoute(data: any) {
   try {
-    const res = await fetch(API_BASE, {
+    const res = await fetch("http://127.0.0.1:5001/api/travel", { 
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
     return res.ok;
   } catch (e) {
+    console.error("Connection failed", e);
     return false;
   }
 }

@@ -19,7 +19,6 @@ export default function Home() {
         <h1 style={{ color: "#1e293b", fontSize: "32px", fontWeight: "800" }}>
           გამარჯობა, {userProfile.driverName}! {":)"}
         </h1>
-        <p style={{ color: "#64748b", margin: "10px 0 25px" }}>თქვენ წარმატებით გაიარეთ ავტორიზაცია.</p>
         
         <button 
           onClick={logout}

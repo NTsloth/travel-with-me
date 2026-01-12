@@ -19,20 +19,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
-  // 1. Effect to load user from localStorage on initial boot
   useEffect(() => {
     const savedUser = localStorage.getItem("travel_user");
     if (savedUser) {
       try {
         setUserProfile(JSON.parse(savedUser));
       } catch (e) {
-        console.error("Failed to parse saved user", e);
+        localStorage.removeItem("travel_user");
       }
     }
   }, []);
 
   const registerUser = async (data: any) => {
-    console.log("Frontend Context: Sending data to backend ->", data);
     try {
       const response = await fetch("http://127.0.0.1:5001/api/register", {
         method: "POST",
@@ -41,31 +39,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       const result = await response.json();
-      console.log("Frontend Context: Server Response ->", result);
 
-      if (response.ok) {
-        const newUser: UserProfile = {
-          gmail: result.user.gmail,
-          driverName: result.user.driverName,
-          driverPhone: result.user.number,
-          driverAge: parseInt(result.user.driverAge),
-        };
-
-        // 2. Save to state AND localStorage
-        setUserProfile(newUser);
-        localStorage.setItem("travel_user", JSON.stringify(newUser));
-        
-        return { success: true };
+      if (!response.ok) {
+        return { success: false, message: result.message || "შეცდომა რეგისტრაციისას" };
       }
-      return { success: false, message: result.message };
+
+      // Map the backend 'number' to frontend 'driverPhone'
+      const newUser: UserProfile = {
+        gmail: result.user.gmail,
+        driverName: result.user.driverName,
+        driverPhone: result.user.number, 
+        driverAge: result.user.driverAge,
+      };
+
+      setUserProfile(newUser);
+      localStorage.setItem("travel_user", JSON.stringify(newUser));
+      return { success: true };
+
     } catch (err) {
-      console.error("Frontend Context: Fetch Error ->", err);
+      console.error("Fetch Error:", err);
       return { success: false, message: "სერვერთან კავშირი ვერ დამყარდა" };
     }
   };
 
   const logout = () => {
-    // 3. Clear from state AND localStorage
     setUserProfile(null);
     localStorage.removeItem("travel_user");
   };

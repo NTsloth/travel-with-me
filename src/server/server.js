@@ -7,7 +7,8 @@ app.use(express.json());
 
 const today = new Date().toISOString().split("T")[0];
 
-let users = []; 
+let users = [];
+
 let mockRoutes = [
   { id: 1, fromCity: "თბილისი", toCity: "ბათუმი", date: today, price: "20 GEL", carModel: "Toyota Prius (2018)", driverName: "გიორგი დვალი", driverAge: 35, driverPhone: "555 123 456", freeSeats: 3 },
   { id: 2, fromCity: "ქუთაისი", toCity: "თბილისი", date: today, price: "15 GEL", carModel: "Mercedes-Benz E-Class", driverName: "ნინო ბერიძე", driverAge: 28, driverPhone: "599 987 654", freeSeats: 1 },
@@ -22,6 +23,42 @@ let mockRoutes = [
   { id: 11, fromCity: "თბილისი", toCity: "ქუთაისი", date: today, price: "15 GEL", carModel: "Toyota Aqua", driverName: "ქეთი ლომიძე", driverAge: 31, driverPhone: "555 999 888", freeSeats: 2 },
 ];
 
+app.post('/api/register', (req, res) => {
+  const data = req.body;
+  
+  const emailInput = data.gmail ? data.gmail.trim().toLowerCase() : "";
+  const phoneInput = data.number ? data.number.trim() : "";
+  const nameInput = data.driverName ? data.driverName.trim() : "";
+
+  if (!emailInput || !phoneInput || !nameInput || !data.password || !data.birthYear) {
+    return res.status(400).json({ message: "გთხოვთ შეავსოთ ყველა ველი" });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const geoPhoneRegex = /^5\d{8}$/; 
+
+  if (!emailRegex.test(emailInput)) {
+    return res.status(400).json({ message: "ელ-ფოსტის ფორმატი არასწორია" });
+  }
+  if (!geoPhoneRegex.test(phoneInput)) {
+    return res.status(400).json({ message: "ნომერი უნდა იყოს 9 ციფრი და იწყებოდეს 5-ით" });
+  }
+
+  const age = new Date().getFullYear() - parseInt(data.birthYear);
+  if (age < 18) {
+    return res.status(400).json({ message: "რეგისტრაციისთვის საჭიროა იყოთ 18+ წლის" });
+  }
+
+  const alreadyExists = users.some(u => u.gmail === emailInput || u.number === phoneInput);
+  if (alreadyExists) {
+    return res.status(400).json({ message: "მომხმარებელი ამ მონაცემებით უკვე არსებობს" });
+  }
+
+  const newUser = { gmail: emailInput, driverName: nameInput, number: phoneInput, driverAge: age, password: data.password };
+  users.push(newUser);
+  res.status(201).json({ message: "Success", user: newUser });
+});
+
 app.get('/api/travel', (req, res) => {
   const { fromCity, toCity, travelDate } = req.query;
   let filtered = [...mockRoutes];
@@ -32,42 +69,16 @@ app.get('/api/travel', (req, res) => {
 });
 
 app.post('/api/travel', (req, res) => {
-  const newRoute = { ...req.body, id: mockRoutes.length + 1 };
+  const newRoute = {
+    id: Date.now(),
+    ...req.body,
+    freeSeats: parseInt(req.body.freeSeats) || 1
+  };
   mockRoutes.unshift(newRoute); 
-  res.status(201).json(newRoute);
-});
-
-app.post('/api/register', (req, res) => {
-  console.log("-----------------------------------------");
-  console.log("REQ RECEIVED AT:", new Date().toLocaleTimeString());
-  console.log("BODY:", req.body);
-
-  const { gmail, driverName, number, driverAge } = req.body;
-
-  if (!gmail || !driverName || !number || !driverAge) {
-    console.log("ERROR: Missing fields");
-    return res.status(400).json({ message: "შეავსეთ ყველა ველი" });
-  }
-
-  if (parseInt(driverAge) < 18) {
-    console.log("ERROR: Underage");
-    return res.status(400).json({ message: "ასაკი უნდა იყოს 18+" });
-  }
-
-  if (!/^5\d{8}$/.test(number)) {
-    console.log("ERROR: Invalid phone format");
-    return res.status(400).json({ message: "არასწორი ქართული ნომერი" });
-  }
-
-  console.log("SUCCESS: User added to list");
-  users.push(req.body);
-  console.log("TOTAL USERS:", users.length);
-  console.log("-----------------------------------------");
-  
-  res.status(201).json({ message: "Success", user: req.body });
+  res.status(201).json({ success: true, route: newRoute });
 });
 
 const PORT = 5001;
-app.listen(PORT, '127.0.0.1', () => {
-  console.log(`🚀 SERVER RUNNING ON http://127.0.0.1:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 SERVER RUNNING ON PORT ${PORT}`);
 });
