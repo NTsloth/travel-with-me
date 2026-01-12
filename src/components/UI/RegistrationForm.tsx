@@ -6,13 +6,8 @@ import styles from "@/styles/UI/Registration.module.css";
 export function RegistrationForm() {
   const { registerUser } = useAuth();
   const [formData, setFormData] = useState({ 
-    gmail: "", 
-    number: "", 
-    driverName: "", 
-    password: "",
-    birthDay: "",
-    birthMonth: "",
-    birthYear: ""
+    gmail: "", number: "", driverName: "", password: "",
+    birthDay: "", birthMonth: "", birthYear: ""
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,9 +20,7 @@ export function RegistrationForm() {
     e.preventDefault();
     setError("");
     setLoading(true);
-
     const result = await registerUser(formData);
-
     if (!result.success) {
       setError(result.message || "შეცდომა რეგისტრაციისას");
     }
@@ -39,37 +32,32 @@ export function RegistrationForm() {
       <div className={styles.registrationCard}>
         <h2 className={styles.title}>რეგისტრაცია</h2>
         <form onSubmit={handleSubmit} className={styles.form}>
+          <input id="driverName" name="driverName" className={styles.input} placeholder="სახელი და გვარი" required 
+            value={formData.driverName} onChange={(e) => setFormData({...formData, driverName: e.target.value})} />
           
-          <input className={styles.input} placeholder="სახელი და გვარი" required 
-            value={formData.driverName}
-            onChange={(e) => setFormData({...formData, driverName: e.target.value})} />
-
-          <input className={styles.input} type="email" placeholder="ელ-ფოსტა" required 
-            value={formData.gmail}
-            onChange={(e) => setFormData({...formData, gmail: e.target.value})} />
-
-          <input className={styles.input} type="password" placeholder="პაროლი" required 
-            value={formData.password}
-            onChange={(e) => setFormData({...formData, password: e.target.value})} />
-
-          <input className={styles.input} type="tel" maxLength={9} placeholder="5________" required 
-            value={formData.number}
-            onChange={(e) => setFormData({...formData, number: e.target.value.replace(/\D/g, '')})} />
+          <input id="gmail" name="gmail" className={styles.input} type="email" placeholder="ელ-ფოსტა" required 
+            value={formData.gmail} onChange={(e) => setFormData({...formData, gmail: e.target.value})} />
+          
+          <input id="password" name="password" className={styles.input} type="password" placeholder="პაროლი" required 
+            value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} />
+          
+          <input id="number" name="number" className={styles.input} type="tel" maxLength={9} placeholder="5________" required 
+            value={formData.number} onChange={(e) => setFormData({...formData, number: e.target.value.replace(/\D/g, '')})} />
 
           <div style={{ display: "flex", gap: "10px" }}>
-            <select className={styles.input} required value={formData.birthDay}
+            <select id="birthDay" name="birthDay" className={styles.input} required value={formData.birthDay}
               onChange={(e) => setFormData({...formData, birthDay: e.target.value})}>
               <option value="">დღე</option>
               {days.map(d => <option key={d} value={d.toString()}>{d}</option>)}
             </select>
 
-            <select className={styles.input} required value={formData.birthMonth}
+            <select id="birthMonth" name="birthMonth" className={styles.input} required value={formData.birthMonth}
               onChange={(e) => setFormData({...formData, birthMonth: e.target.value})}>
               <option value="">თვე</option>
               {months.map(m => <option key={m} value={m.toString()}>{m}</option>)}
             </select>
 
-            <select className={styles.input} required value={formData.birthYear}
+            <select id="birthYear" name="birthYear" className={styles.input} required value={formData.birthYear}
               onChange={(e) => setFormData({...formData, birthYear: e.target.value})}>
               <option value="">წელი</option>
               {years.map(y => <option key={y} value={y.toString()}>{y}</option>)}

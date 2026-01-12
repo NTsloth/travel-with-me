@@ -8,7 +8,6 @@ app.use(express.json());
 const today = new Date().toISOString().split("T")[0];
 
 let users = [];
-
 let mockRoutes = [
   { id: 1, fromCity: "თბილისი", toCity: "ბათუმი", date: today, price: "20 GEL", carModel: "Toyota Prius (2018)", driverName: "გიორგი დვალი", driverAge: 35, driverPhone: "555 123 456", freeSeats: 3 },
   { id: 2, fromCity: "ქუთაისი", toCity: "თბილისი", date: today, price: "15 GEL", carModel: "Mercedes-Benz E-Class", driverName: "ნინო ბერიძე", driverAge: 28, driverPhone: "599 987 654", freeSeats: 1 },
@@ -25,7 +24,6 @@ let mockRoutes = [
 
 app.post('/api/register', (req, res) => {
   const data = req.body;
-  
   const emailInput = data.gmail ? data.gmail.trim().toLowerCase() : "";
   const phoneInput = data.number ? data.number.trim() : "";
   const nameInput = data.driverName ? data.driverName.trim() : "";
@@ -35,7 +33,7 @@ app.post('/api/register', (req, res) => {
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const geoPhoneRegex = /^5\d{8}$/; 
+  const geoPhoneRegex = /^5\d{8}$/;
 
   if (!emailRegex.test(emailInput)) {
     return res.status(400).json({ message: "ელ-ფოსტის ფორმატი არასწორია" });
@@ -51,7 +49,7 @@ app.post('/api/register', (req, res) => {
 
   const alreadyExists = users.some(u => u.gmail === emailInput || u.number === phoneInput);
   if (alreadyExists) {
-    return res.status(400).json({ message: "მომხმარებელი ამ მონაცემებით უკვე არსებობს" });
+    return res.status(400).json({ message: "მომხმარებელი უკვე არსებობს" });
   }
 
   const newUser = { gmail: emailInput, driverName: nameInput, number: phoneInput, driverAge: age, password: data.password };
@@ -71,14 +69,20 @@ app.get('/api/travel', (req, res) => {
 app.post('/api/travel', (req, res) => {
   const newRoute = {
     id: Date.now(),
-    ...req.body,
+    fromCity: req.body.fromCity,
+    toCity: req.body.toCity,
+    date: req.body.date,
+    price: req.body.price,
+    carModel: req.body.carModel,
+    driverName: req.body.driverName,
+    driverAge: req.body.driverAge,
+    driverPhone: req.body.driverPhone,
     freeSeats: parseInt(req.body.freeSeats) || 1
   };
-  mockRoutes.unshift(newRoute); 
+  mockRoutes.unshift(newRoute);
   res.status(201).json({ success: true, route: newRoute });
 });
 
-const PORT = 5001;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 SERVER RUNNING ON PORT ${PORT}`);
+app.listen(5001, '0.0.0.0', () => {
+  console.log(`SERVER RUNNING ON PORT 5001`);
 });
