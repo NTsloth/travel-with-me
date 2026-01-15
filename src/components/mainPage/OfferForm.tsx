@@ -4,7 +4,7 @@ import React, { useState, FormEvent, useEffect } from "react";
 import { useTravelSearch } from "@/components/context/TravelSearchContext";
 import { GEORGIAN_CITIES, TravelRoute } from "@/components/data/data";
 import { useAuth } from "@/components/context/AuthContext";
-import styles from "../../../styles/UI/Registration.module.css";
+import styles from "../../styles/Registration.module.css";
 
 const initialFormData: Omit<TravelRoute, "id"> = {
   fromCity: GEORGIAN_CITIES[0],
@@ -24,18 +24,8 @@ export function OfferForm({ isModal = false }: { isModal?: boolean }) {
   const [formData, setFormData] = useState(initialFormData);
   const [status, setStatus] = useState("");
 
-  if (!userProfile) {
-    return (
-      <div className={styles.phoneBox}>
-        <p style={{ color: "rgb(239 68 68)", fontWeight: "700" }}>
-          შეცდომა: მომხმარებლის პროფილი ვერ მოიძებნა.
-        </p>
-      </div>
-    );
-  }
-
   useEffect(() => {
-    if (userProfile && userProfile.driverName) {
+    if (userProfile) {
       setFormData((prev) => ({
         ...prev,
         driverName: userProfile.driverName,
@@ -45,8 +35,22 @@ export function OfferForm({ isModal = false }: { isModal?: boolean }) {
     }
   }, [userProfile]);
 
+  if (!userProfile) {
+    return (
+      <div className={styles.phoneBox}>
+        <p style={{ color: "rgb(239 68 68)", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          შეცდომა: მომხმარებლის პროფილი ვერ მოიძებნა. გთხოვთ გაიაროთ რეგისტრაცია.
+        </p>
+      </div>
+    );
+  }
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
+    
     if (["driverName", "driverAge", "driverPhone"].includes(name)) return;
 
     setFormData((prev) => ({
@@ -81,7 +85,12 @@ export function OfferForm({ isModal = false }: { isModal?: boolean }) {
 
     if (success) {
       setStatus("✅ შეთავაზება წარმატებით დაემატა!");
-      setFormData(initialFormData);
+      setFormData({
+        ...initialFormData,
+        driverName: userProfile.driverName,
+        driverAge: userProfile.driverAge,
+        driverPhone: userProfile.driverPhone,
+      });
     } else {
       setStatus("შეცდომა დამატებისას. სცადეთ თავიდან.");
     }
@@ -92,7 +101,12 @@ export function OfferForm({ isModal = false }: { isModal?: boolean }) {
       <form onSubmit={handleSubmit} className={styles.modernForm}>
         
         <div className={styles.formSection}>
-          <h3 className={styles.sectionTitle}>👤 მძღოლის მონაცემები</h3>
+          <h3 className={styles.sectionTitle} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+            მძღოლის მონაცემები
+          </h3>
           <div className={styles.formGrid}>
             <div className={styles.inputGroup}>
               <label htmlFor="offer-driver-name">სახელი</label>
@@ -100,7 +114,7 @@ export function OfferForm({ isModal = false }: { isModal?: boolean }) {
                 id="offer-driver-name"
                 name="driverName"
                 type="text" 
-                value={userProfile.driverName} 
+                value={formData.driverName} 
                 className={styles.disabledInput} 
                 disabled 
               />
@@ -111,7 +125,7 @@ export function OfferForm({ isModal = false }: { isModal?: boolean }) {
                 id="offer-driver-age"
                 name="driverAge"
                 type="text" 
-                value={userProfile.driverAge} 
+                value={formData.driverAge || ""} 
                 className={styles.disabledInput} 
                 disabled 
               />
@@ -122,7 +136,7 @@ export function OfferForm({ isModal = false }: { isModal?: boolean }) {
                 id="offer-driver-phone"
                 name="driverPhone"
                 type="text" 
-                value={userProfile.driverPhone} 
+                value={formData.driverPhone} 
                 className={styles.disabledInput} 
                 disabled 
               />
@@ -131,7 +145,12 @@ export function OfferForm({ isModal = false }: { isModal?: boolean }) {
         </div>
 
         <div className={styles.formSection}>
-          <h3 className={styles.sectionTitle}>📍 მარშრუტის დეტალები</h3>
+          <h3 className={styles.sectionTitle} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+            მარშრუტის დეტალები
+          </h3>
           <div className={styles.formGrid}>
             <div className={styles.inputGroup}>
               <label htmlFor="offer-from-city">საიდან</label>
@@ -170,7 +189,12 @@ export function OfferForm({ isModal = false }: { isModal?: boolean }) {
         </div>
 
         <div className={styles.formSection}>
-          <h3 className={styles.sectionTitle}>🚘 ავტომობილი და ღირებულება</h3>
+          <h3 className={styles.sectionTitle} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="1" y="3" width="15" height="13"/><polyline points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+            </svg>
+            ავტომობილი და ღირებულება
+          </h3>
           <div className={styles.formGrid}>
             <div className={styles.inputGroup}>
               <label htmlFor="offer-car-model">მანქანის მოდელი</label>

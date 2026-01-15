@@ -1,0 +1,37 @@
+[
+  {
+    "gmail": "tavadzed@gmail.com",
+    "driverName": "nino",
+    "number": "555555555",
+    "driverAge": 28,
+    "password": "12345"
+  },
+  {
+    "gmail": "admin@gmail.com",
+    "driverName": "kaka",
+    "number": "554444444",
+    "driverAge": 24,
+    "password": "admin"
+  },
+  {
+    "gmail": "kala@gmail.com",
+    "driverName": "nino",
+    "number": "544444444",
+    "driverAge": 63,
+    "password": "12345dd?D"
+  },
+  {
+    "gmail": "ssksk@gmail.com",
+    "driverName": "kak",
+    "number": "555555577",
+    "driverAge": 31,
+    "password": "NTsloth2003?"
+  },
+  {
+    "gmail": "kutukutua@gmail.com",
+    "driverName": "tengula",
+    "number": "503905043",
+    "driverAge": 67,
+    "password": "A678459pkln$"
+  }
+]

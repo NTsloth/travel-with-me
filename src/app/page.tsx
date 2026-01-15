@@ -1,8 +1,8 @@
 "use client";
-
 import { useAuth } from "@/components/context/AuthContext";
 import { RegistrationForm } from "@/components/UI/RegistrationForm";
-import Header from "@/components/layouts/header/Header";
+import Header from "@/components/mainPage/Header";
+import { TravelSearchProvider } from "@/components/context/TravelSearchContext";
 
 export default function Home() {
   const { userProfile, logout } = useAuth();
@@ -12,30 +12,54 @@ export default function Home() {
   }
 
   return (
-    <main style={{ minHeight: "100vh", backgroundColor: "#f1f5f9" }}>
-      <Header />
-
-      <div style={{ maxWidth: "1200px", margin: "0px auto", padding: "40px 20px", textAlign: "center" }}>
-        <h1 style={{ color: "#1e293b", fontSize: "32px", fontWeight: "800" }}>
-          გამარჯობა, {userProfile.driverName}! {":)"}
-        </h1>
+    <TravelSearchProvider>
+      <main style={{ minHeight: "100vh", backgroundColor: "#f1f5f9" }}>
+        <Header />
         
-        <button 
-          onClick={logout}
-          style={{
-            padding: "12px 24px",
-            backgroundColor: "#ef4444",
-            color: "white",
-            border: "none",
-            borderRadius: "10px",
-            fontWeight: "700",
-            cursor: "pointer",
-            boxShadow: "0 4px 12px rgba(239, 68, 68, 0.2)"
-          }}
-        >
-          🔄 ხელახალი რეგისტრაცია
-        </button>
-      </div>
-    </main>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "20px" }}>
+          <div style={{ 
+            display: "flex", 
+            justifyContent: "space-between", 
+            alignItems: "center",
+            backgroundColor: "white",
+            padding: "15px 25px",
+            borderRadius: "12px",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+            marginBottom: "20px"
+          }}>
+            <div>
+              <h1 style={{ fontSize: "18px", margin: 0 }}>
+                მოგესალმებით, <span style={{ color: "#3b82f6" }}>{userProfile.driverName}</span>!
+              </h1>
+              <p style={{ fontSize: "14px", color: "#64748b", margin: "5px 0 0 0" }}>
+                {userProfile.gmail}
+              </p>
+            </div>
+
+            <button 
+              onClick={logout}
+              style={{
+                padding: "10px 20px",
+                backgroundColor: "#ef4444",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                fontWeight: "600",
+                cursor: "pointer",
+                transition: "background 0.2s"
+              }}
+              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#dc2626")}
+              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#ef4444")}
+            >
+              გამოსვლა
+            </button>
+          </div>
+
+          <div style={{ textAlign: "center", marginTop: "50px" }}>
+            <p>@NTsloth</p>
+          </div>
+        </div>
+      </main>
+    </TravelSearchProvider>
   );
 }

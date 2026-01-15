@@ -1,6 +1,5 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { fetchTravelData, addTravelRoute } from "../data/data";
 
 const TravelSearchContext = createContext<any>(undefined);
 
@@ -14,27 +13,49 @@ export const TravelSearchProvider = ({ children }: { children: React.ReactNode }
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
-    const data = await fetchTravelData(searchState);
-    setSearchResults(data);
-    setIsLoading(false);
+    try {
+      const query = new URLSearchParams(searchState).toString();
+      const response = await fetch(`/api/travel?${query}`);
+      const data = await response.json();
+      setSearchResults(data);
+    } catch (error) {
+      console.error("Fetch error:", error);
+    } finally {
+      setIsLoading(false);
+    }
   }, [searchState]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const handleAddRoute = async (routeData: any) => {
+    try {
+      const response = await fetch("/api/travel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(routeData),
+      });
+
+      if (response.ok) {
+        await loadData();
+        setIsOfferModalOpen(false);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Add route error:", error);
+      return false;
+    }
+  };
 
   return (
     <TravelSearchContext.Provider value={{
       searchState, setSearchState, searchResults, isLoading,
       handleSearch: () => loadData(),
-      handleAddRoute: async (data: any) => {
-        const success = await addTravelRoute(data);
-        if (success) { await loadData(); setIsOfferModalOpen(false); return true; }
-        return false;
-      },
+      handleAddRoute,
       isOfferModalOpen, 
       openOfferModal: () => setIsOfferModalOpen(true), 
       closeOfferModal: () => setIsOfferModalOpen(false),
-      isModalOpen, 
-      selectedRoute, 
+      isModalOpen, selectedRoute, 
       openModal: (route: any) => { setSelectedRoute(route); setIsModalOpen(true); }, 
       closeModal: () => { setIsModalOpen(false); setSelectedRoute(null); }
     }}>
