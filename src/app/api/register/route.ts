@@ -27,14 +27,6 @@ const getUsers = async (): Promise<any[]> => {
   }
 };
 
-const saveUsers = async (users: any[]) => {
-  if (kv) {
-    await kv.set("users", users);
-  } else {
-    fs.writeFileSync(filePath, JSON.stringify(users, null, 2));
-  }
-};
-
 export async function GET() {
   const users = await getUsers();
   const safeUsers = users.map(({ password, ...user }: any) => user);
@@ -57,7 +49,12 @@ export async function POST(req: Request) {
 
     const newUser = { ...data, gmail: emailInput, id: Date.now() };
     users.push(newUser);
-    await saveUsers(users);
+
+    if (kv) {
+      await kv.set("users", users);
+    } else {
+      fs.writeFileSync(filePath, JSON.stringify(users, null, 2));
+    }
 
     return NextResponse.json({ success: true, user: newUser }, { status: 201 });
   } catch (e) {
