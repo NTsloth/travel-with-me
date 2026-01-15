@@ -5,6 +5,7 @@ import { createClient } from "@vercel/kv";
 
 const filePath = path.join(process.cwd(), "users.json");
 
+// ვიყენებთ STORAGE_ პრეფიქსს, რადგან Vercel-ზე ასე გაქვს შენახული
 const kv = (process.env.STORAGE_REST_API_URL && process.env.STORAGE_REST_API_TOKEN)
   ? createClient({
       url: process.env.STORAGE_REST_API_URL,
@@ -16,7 +17,7 @@ const getUsers = async (): Promise<any[]> => {
   if (kv) {
     try {
       const data = await kv.get("users");
-      return (data as any[]) || [];
+      return (data as any[]) || []; // TypeScript-ისთვის ვამატებთ as any[]
     } catch { return []; }
   } else {
     try {
@@ -53,6 +54,7 @@ export async function POST(req: Request) {
     if (kv) {
       await kv.set("users", users);
     } else {
+      // Vercel-ზე ეს ნაწილი ერორს აგდებს, ამიტომ KV აუცილებელია
       fs.writeFileSync(filePath, JSON.stringify(users, null, 2));
     }
 
