@@ -3,12 +3,15 @@ import { createClient } from "@vercel/kv";
 import fs from "fs";
 import path from "path";
 
-const kv = (process.env.STORAGE_REST_API_URL && process.env.STORAGE_REST_API_TOKEN)
-  ? createClient({
-      url: process.env.STORAGE_REST_API_URL,
-      token: process.env.STORAGE_REST_API_TOKEN,
-    })
-  : null;
+const kv = (
+    (process.env.STORAGE_REST_API_URL || process.env.KV_REST_API_URL) && 
+    (process.env.STORAGE_REST_API_TOKEN || process.env.KV_REST_API_TOKEN)
+  )
+    ? createClient({
+        url: process.env.STORAGE_REST_API_URL || process.env.KV_REST_API_URL || "",
+        token: process.env.STORAGE_REST_API_TOKEN || process.env.KV_REST_API_TOKEN || "",
+      })
+    : null;
 
 export async function GET() {
   try {

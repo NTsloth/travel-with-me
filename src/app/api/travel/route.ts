@@ -17,10 +17,15 @@ const mockRoutes = [
   { id: 11, fromCity: "თბილისი", toCity: "ქუთაისი", date: today, price: "15 GEL", carModel: "Toyota Aqua", driverName: "ქეთი ლომიძე", driverAge: 31, driverPhone: "555 999 888", freeSeats: 2 },
 ];
 
-const kv = (process.env.STORAGE_REST_API_URL && process.env.STORAGE_REST_API_TOKEN) 
-  ? createClient({ url: process.env.STORAGE_REST_API_URL, token: process.env.STORAGE_REST_API_TOKEN }) 
+const kv = (
+  (process.env.STORAGE_REST_API_URL || process.env.KV_REST_API_URL) && 
+  (process.env.STORAGE_REST_API_TOKEN || process.env.KV_REST_API_TOKEN)
+)
+  ? createClient({
+      url: process.env.STORAGE_REST_API_URL || process.env.KV_REST_API_URL || "",
+      token: process.env.STORAGE_REST_API_TOKEN || process.env.KV_REST_API_TOKEN || "",
+    })
   : null;
-
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const fromCity = searchParams.get("fromCity");

@@ -6,13 +6,15 @@ import { createClient } from "@vercel/kv";
 const sessionsPath = path.join(process.cwd(), "active_sessions.json");
 const usersPath = path.join(process.cwd(), "users.json");
 
-const kv = (process.env.STORAGE_REST_API_URL && process.env.STORAGE_REST_API_TOKEN)
+const kv = (
+  (process.env.STORAGE_REST_API_URL || process.env.KV_REST_API_URL) && 
+  (process.env.STORAGE_REST_API_TOKEN || process.env.KV_REST_API_TOKEN)
+)
   ? createClient({
-      url: process.env.STORAGE_REST_API_URL,
-      token: process.env.STORAGE_REST_API_TOKEN,
+      url: process.env.STORAGE_REST_API_URL || process.env.KV_REST_API_URL || "",
+      token: process.env.STORAGE_REST_API_TOKEN || process.env.KV_REST_API_TOKEN || "",
     })
   : null;
-
 const getSessions = async (): Promise<any[]> => {
   if (kv) {
     return (await kv.get("active_sessions") as any[]) || [];
