@@ -63,7 +63,6 @@ export function HeaderSearch() {
 
       <div className={styles.actions}>
         <button className={styles.offerButton} onClick={openOfferModal} type="button" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          {/* SVG Plus Icon */}
           <svg 
             width="18" 
             height="18" 

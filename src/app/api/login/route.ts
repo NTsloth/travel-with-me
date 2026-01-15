@@ -1,36 +1,29 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { createClient } from "@vercel/kv";
 
 const filePath = path.join(process.cwd(), "users.json");
 
-const getUsersFromFile = () => {
-  try {
+const kv = createClient({
+  url: process.env.STORAGE_REST_API_URL!,
+  token: process.env.STORAGE_REST_API_TOKEN!,
+});
+
+const getUsers = async () => {
+  if (process.env.NODE_ENV === "production") {
+    return (await kv.get("users")) || [];
+  } else {
     if (!fs.existsSync(filePath)) return [];
     const data = fs.readFileSync(filePath, "utf8");
     return JSON.parse(data || "[]");
-  } catch (error) {
-    return [];
   }
 };
-
-export async function GET() {
-  const users = getUsersFromFile();
-  return NextResponse.json({ 
-    message: "Login API is live", 
-    totalUsers: users.length, 
-    allUsers: users.map((u: any) => ({ 
-      name: u.driverName, 
-      email: u.gmail, 
-      phone: u.number 
-    })) 
-  });
-}
 
 export async function POST(req: Request) {
   try {
     const { identifier, password } = await req.json();
-    const users = getUsersFromFile();
+    const users = await getUsers();
 
     if (!identifier || !password) {
       return NextResponse.json({ message: "შეავსეთ ყველა ველი" }, { status: 400 });
