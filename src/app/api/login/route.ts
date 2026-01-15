@@ -6,10 +6,10 @@ import { createClient } from "@vercel/kv";
 const sessionsPath = path.join(process.cwd(), "active_sessions.json");
 const usersPath = path.join(process.cwd(), "users.json");
 
-const kv = (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN)
+const kv = (process.env.STORAGE_REST_API_URL && process.env.STORAGE_REST_API_TOKEN)
   ? createClient({
-      url: process.env.KV_REST_API_URL,
-      token: process.env.KV_REST_API_TOKEN,
+      url: process.env.STORAGE_REST_API_URL,
+      token: process.env.STORAGE_REST_API_TOKEN,
     })
   : null;
 
@@ -31,7 +31,6 @@ export async function POST(req: Request) {
   try {
     const { identifier, password } = await req.json();
     
-    // იუზერების წამოღება
     let users: any[] = [];
     if (kv) {
       users = (await kv.get("users") as any[]) || [];
@@ -47,7 +46,6 @@ export async function POST(req: Request) {
 
     const { password: _, ...safeUser } = user;
 
-    // სესიის შენახვა
     let sessions = await getSessions();
     if (!sessions.find(s => s.gmail === safeUser.gmail)) {
       sessions.push({ ...safeUser, loginTime: new Date().toLocaleString() });

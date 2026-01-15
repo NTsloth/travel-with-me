@@ -5,11 +5,10 @@ import { createClient } from "@vercel/kv";
 
 const filePath = path.join(process.cwd(), "users.json");
 
-// ვიყენებთ Vercel-ის სტანდარტულ KV_ პრეფიქსს, რომელსაც Vercel ავტომატურად გვაძლევს
-const kv = (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN)
+const kv = (process.env.STORAGE_REST_API_URL && process.env.STORAGE_REST_API_TOKEN)
   ? createClient({
-      url: process.env.KV_REST_API_URL,
-      token: process.env.KV_REST_API_TOKEN,
+      url: process.env.STORAGE_REST_API_URL,
+      token: process.env.STORAGE_REST_API_TOKEN,
     })
   : null;
 
