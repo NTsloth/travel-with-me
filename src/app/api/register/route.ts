@@ -1,35 +1,21 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { createClient } from "@vercel/kv";
 
 const filePath = path.join(process.cwd(), "users.json");
 
-// ვიყენებთ STORAGE_ პრეფიქსს, რადგან Vercel-ზე ასე გაქვს შენახული
-const kv = (process.env.STORAGE_REST_API_URL && process.env.STORAGE_REST_API_TOKEN)
-  ? createClient({
-      url: process.env.STORAGE_REST_API_URL,
-      token: process.env.STORAGE_REST_API_TOKEN,
-    })
-  : null;
-
-const getUsers = async (): Promise<any[]> => {
-  if (kv) {
-    try {
-      const data = await kv.get("users");
-      return (data as any[]) || []; // TypeScript-ისთვის ვამატებთ as any[]
-    } catch { return []; }
-  } else {
-    try {
-      if (!fs.existsSync(filePath)) return [];
-      const data = fs.readFileSync(filePath, "utf8");
-      return JSON.parse(data || "[]");
-    } catch { return []; }
+const getUsers = (): any[] => {
+  try {
+    if (!fs.existsSync(filePath)) return [];
+    const data = fs.readFileSync(filePath, "utf8");
+    return JSON.parse(data || "[]");
+  } catch {
+    return [];
   }
 };
 
 export async function GET() {
-  const users = await getUsers();
+  const users = getUsers();
   const safeUsers = users.map(({ password, ...user }: any) => user);
   return NextResponse.json(safeUsers);
 }
@@ -37,7 +23,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const data = await req.json();
-    const users = await getUsers();
+    const users = getUsers();
 
     if (!data.gmail || !data.password || !data.number) {
       return NextResponse.json({ message: "შეავსეთ ველები" }, { status: 400 });
@@ -51,12 +37,7 @@ export async function POST(req: Request) {
     const newUser = { ...data, gmail: emailInput, id: Date.now() };
     users.push(newUser);
 
-    if (kv) {
-      await kv.set("users", users);
-    } else {
-      // Vercel-ზე ეს ნაწილი ერორს აგდებს, ამიტომ KV აუცილებელია
-      fs.writeFileSync(filePath, JSON.stringify(users, null, 2));
-    }
+    fs.writeFileSync(filePath, JSON.stringify(users, null, 2));
 
     return NextResponse.json({ success: true, user: newUser }, { status: 201 });
   } catch (e) {

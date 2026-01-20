@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@vercel/kv";
+import fs from "fs";
+import path from "path";
+
+const travelPath = path.join(process.cwd(), "travel_routes.json");
 
 const today = new Date().toISOString().split("T")[0];
 
@@ -17,26 +20,25 @@ const mockRoutes = [
   { id: 11, fromCity: "თბილისი", toCity: "ქუთაისი", date: today, price: "15 GEL", carModel: "Toyota Aqua", driverName: "ქეთი ლომიძე", driverAge: 31, driverPhone: "555 999 888", freeSeats: 2 },
 ];
 
-const kv = (
-  (process.env.STORAGE_REST_API_URL || process.env.KV_REST_API_URL) && 
-  (process.env.STORAGE_REST_API_TOKEN || process.env.KV_REST_API_TOKEN)
-)
-  ? createClient({
-      url: process.env.STORAGE_REST_API_URL || process.env.KV_REST_API_URL || "",
-      token: process.env.STORAGE_REST_API_TOKEN || process.env.KV_REST_API_TOKEN || "",
-    })
-  : null;
+const getRoutes = (): any[] => {
+  if (!fs.existsSync(travelPath)) {
+    fs.writeFileSync(travelPath, JSON.stringify(mockRoutes, null, 2));
+    return mockRoutes;
+  }
+  try {
+    const fileContent = fs.readFileSync(travelPath, "utf8");
+    return JSON.parse(fileContent || "[]");
+  } catch {
+    return mockRoutes;
+  }
+};
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const fromCity = searchParams.get("fromCity");
   const toCity = searchParams.get("toCity");
 
-  let dbRoutes: any[] = mockRoutes;
-  
-  if (kv) {
-    const saved = await kv.get("travel_routes");
-    if (saved) dbRoutes = saved as any[];
-  }
+  let dbRoutes = getRoutes();
 
   let filtered = [...dbRoutes];
   if (fromCity) filtered = filtered.filter(r => r.fromCity === fromCity);
@@ -48,12 +50,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    let dbRoutes: any[] = mockRoutes;
-
-    if (kv) {
-      const saved = await kv.get("travel_routes");
-      if (saved) dbRoutes = saved as any[];
-    }
+    let dbRoutes = getRoutes();
     
     const newRoute = {
       id: Date.now(),
@@ -62,7 +59,7 @@ export async function POST(req: Request) {
     };
 
     dbRoutes.unshift(newRoute);
-    if (kv) await kv.set("travel_routes", dbRoutes);
+    fs.writeFileSync(travelPath, JSON.stringify(dbRoutes, null, 2));
     
     return NextResponse.json({ success: true, route: newRoute }, { status: 201 });
   } catch (error) {

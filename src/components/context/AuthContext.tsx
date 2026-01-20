@@ -1,90 +1,68 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
-interface UserProfile {
-  gmail: string;
+export interface UserProfile {
   driverName: string;
-  driverPhone: string;
   driverAge: number;
+  driverPhone: string;
+  number: string;
+  gmail: string;
 }
 
 interface AuthContextType {
   userProfile: UserProfile | null;
-  registerUser: (data: any) => Promise<{ success: boolean; message: string }>;
-  loginUser: (identifier: string, password: any) => Promise<{ success: boolean; message: string }>;
+  registerUser: (data: any) => Promise<{ success: boolean; message?: string }>;
+  loginUser: (identifier: string, pass: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("travel_user");
+    const savedUser = localStorage.getItem("activeUser");
     if (savedUser) {
-      try {
-        setUserProfile(JSON.parse(savedUser));
-      } catch {
-        localStorage.removeItem("travel_user");
-      }
+      setUserProfile(JSON.parse(savedUser));
     }
   }, []);
 
-  const registerUser = async (userData: any) => {
-    try {
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-      });
-      const result = await response.json();
-      if (!response.ok) return { success: false, message: result.message || "შეცდომა" };
-
-      const user = { 
-        gmail: result.user.gmail, 
-        driverName: result.user.driverName, 
-        driverPhone: result.user.number, 
-        driverAge: result.user.driverAge 
-      };
-      
-      setUserProfile(user);
-      localStorage.setItem("travel_user", JSON.stringify(user));
-      return { success: true, message: "" };
-    } catch {
-      return { success: false, message: "კავშირის შეცდომა" };
+  const registerUser = async (data: any) => {
+    const users = JSON.parse(localStorage.getItem("allUsers") || "[]");
+    
+    if (users.find((u: any) => u.gmail === data.gmail)) {
+      return { success: false, message: "ელ-ფოსტა უკვე გამოყენებულია" };
     }
+
+    const newUser = {
+      ...data,
+      driverPhone: data.number,
+    };
+
+    users.push(newUser);
+    localStorage.setItem("allUsers", JSON.stringify(users));
+    localStorage.setItem("activeUser", JSON.stringify(newUser));
+    setUserProfile(newUser);
+    
+    return { success: true };
   };
 
-  const loginUser = async (identifier: string, password: any) => {
-    try {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier, password }),
-      });
-      const result = await response.json();
-      if (!response.ok) return { success: false, message: result.message || "მონაცემები არასწორია" };
+  const loginUser = async (identifier: string, pass: string) => {
+    const users = JSON.parse(localStorage.getItem("allUsers") || "[]");
+    const user = users.find((u: any) => (u.gmail === identifier || u.number === identifier) && u.password === pass);
 
-      const user = { 
-        gmail: result.user.gmail, 
-        driverName: result.user.driverName, 
-        driverPhone: result.user.number, 
-        driverAge: result.user.driverAge 
-      };
-
+    if (user) {
+      localStorage.setItem("activeUser", JSON.stringify(user));
       setUserProfile(user);
-      localStorage.setItem("travel_user", JSON.stringify(user));
-      return { success: true, message: "" };
-    } catch {
-      return { success: false, message: "კავშირის შეცდომა" };
+      return { success: true };
     }
+    return { success: false, message: "მონაცემები არასწორია" };
   };
 
-  const logout = () => { 
-    setUserProfile(null); 
-    localStorage.removeItem("travel_user");
-    window.location.reload(); 
+  const logout = () => {
+    localStorage.removeItem("activeUser");
+    setUserProfile(null);
   };
 
   return (
