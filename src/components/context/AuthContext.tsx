@@ -23,41 +23,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const savedUser = localStorage.getItem("activeUser");
-    if (savedUser) {
-      setUserProfile(JSON.parse(savedUser));
-    }
+    if (savedUser) setUserProfile(JSON.parse(savedUser));
   }, []);
 
   const registerUser = async (data: any) => {
-    const users = JSON.parse(localStorage.getItem("allUsers") || "[]");
-    
-    if (users.find((u: any) => u.gmail === data.gmail)) {
-      return { success: false, message: "ელ-ფოსტა უკვე გამოყენებულია" };
+    try {
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      if (!response.ok) return { success: false, message: result.message };
+
+      const newUser = { ...result.user, driverPhone: result.user.number };
+      localStorage.setItem("activeUser", JSON.stringify(newUser));
+      setUserProfile(newUser);
+      return { success: true };
+    } catch {
+      return { success: false, message: "სერვერთან კავშირი ვერ დამყარდა" };
     }
-
-    const newUser = {
-      ...data,
-      driverPhone: data.number,
-    };
-
-    users.push(newUser);
-    localStorage.setItem("allUsers", JSON.stringify(users));
-    localStorage.setItem("activeUser", JSON.stringify(newUser));
-    setUserProfile(newUser);
-    
-    return { success: true };
   };
 
   const loginUser = async (identifier: string, pass: string) => {
-    const users = JSON.parse(localStorage.getItem("allUsers") || "[]");
-    const user = users.find((u: any) => (u.gmail === identifier || u.number === identifier) && u.password === pass);
-
-    if (user) {
-      localStorage.setItem("activeUser", JSON.stringify(user));
-      setUserProfile(user);
-      return { success: true };
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, password: pass }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        const loggedInUser = { ...result.user, driverPhone: result.user.number };
+        localStorage.setItem("activeUser", JSON.stringify(loggedInUser));
+        setUserProfile(loggedInUser);
+        return { success: true };
+      }
+      return { success: false, message: result.message };
+    } catch {
+      return { success: false, message: "ავტორიზაციის შეცდომა" };
     }
-    return { success: false, message: "მონაცემები არასწორია" };
   };
 
   const logout = () => {
@@ -74,6 +79,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within AuthProvider");
+  if (!context) throw new Error("useAuth error");
   return context;
 };
